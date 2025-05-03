@@ -58,27 +58,44 @@
                     <field name="garden_orientation"/>
                 </group>
             </page>
+            
             <!-- editing part -->
             <page string="Offers">
                 <field name="offer_ids">
-                    <tree>
-                        <field name="price"/>
-                        <field name="status"/>
+                    <tree decoration-info="status == 'pending'" decoration-success="status == 'accepted'" decoration-danger="status == 'refused'">
+                        <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                         <field name="partner_id"/>
+                        <field name="status"/>
+<!-- code editing part -->
+
+                        <button name="action_accept_offer" string="✅"
+                            type="object" class="oe_highlight"/>
+
+                        <button name="action_refuse_offer" string="❌"
+                            type="object" class="oe_highlight"/>
+
                         <field name="validity"/>
                         <field name="expiery_date"/>
                     </tree>
-                    <form>
+                    <form string="Offer Details">
                         <group>
-                            <field name="price"/>
+                            <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="status"/>
                             <field name="partner_id"/>
                             <field name="validity"/>
                             <field name="expiery_date"/>
                         </group>
+                        <separator string="Extra Info" colspan="2"/>
+                        <div class="oe_title">
+                            <h3>Offer Summary</h3>
+                            <p class="text-muted">Ensure expiry date is after creation date.</p>
+                        </div>
                     </form>
                 </field>
             </page>
+
+
+
             <page string = " Price Info ">
                 <group>
                     <field name="expected_price"/>

@@ -16,11 +16,30 @@ class TestModel5(models.Model):
         copy = False,
         string = "Status"
     )
-    partner_id = fields.Many2one('res.partner',required=True)
-    property_id = fields.Many2one('estate_property',required=True)
+    partner_id = fields.Many2one('res.partner',required=True,string = "Seller")
+    property_id = fields.Many2one('estate_property',required=True,string = "Property")
     
     validity = fields.Integer(default = 7,string="Validity",store=True)
     expiery_date = fields.Date(compute="_compute_expiery_date",inverse="_inverse_validity",store=True)
+    
+    
+# editing part to compute related field
+    def action_accept_offer(self):
+        # when function is called status is updating
+        for record in self:
+            record.status = "accepted"
+            
+        # also make changes in buyer and selling price
+            record.property_id.buyer_id = record.partner_id
+            record.property_id.selling_price = record.price   # updating the related model
+            
+        return True
+    
+    @api.depends('status')
+    def action_refuse_offer(self):
+        for record in self:
+            record.status = "refused"
+        return True
     
     
     @api.depends('validity')

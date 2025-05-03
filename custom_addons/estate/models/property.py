@@ -27,6 +27,8 @@ class TestModel(models.Model):
     offer_ids = fields.One2many("property.offer","property_id",string = "Offers")
     
     active = fields.Boolean()
+    
+    # code editing to button and action
     state = fields.Selection(
         [
             ('new','New'),
@@ -36,6 +38,7 @@ class TestModel(models.Model):
             ('cancelled','Cancelled'),
         ],default = 'new'
     )
+    
     post_code = fields.Integer("Post Code",required = True)
     tags = fields.Text("Tags")
     bedrooms = fields.Integer("Bed rooms")
@@ -84,7 +87,16 @@ class TestModel(models.Model):
     def _compute_total_area(self):
         for line in self:
             line.total_area = line.garden_area + line.living_area
-    
+            
+            
+    @api.onchange("garden")
+    def onchange_default_garden(self):
+        if self.garden :
+            self.garden_area=10
+            self.garden_orientation="north"
+        else:
+            self.garden_area=0
+            self.garden_orientation=False
     
 
 
