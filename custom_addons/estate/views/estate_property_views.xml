@@ -26,6 +26,13 @@
             <h1> <field name="title"> </field> </h1>
             <sheet>
             <h1 name="title"> </h1>
+<!-- New buttons to set propert sold and cancell -->
+            <button name="action_set_sold" string="SOLD"
+                    type="object" class="oe_highlight"/>
+
+            <button name="action_set_cancel" string="CANCEL"
+                    type="object" class="oe_highlight"/>
+ 
             <group>
                 <group>
                     <field name="property_type"/>
@@ -70,6 +77,7 @@
 
                         <button name="action_accept_offer" string="✅"
                             type="object" class="oe_highlight"/>
+                            <!-- type="object": Calls a Python method (not a server action). -->
 
                         <button name="action_refuse_offer" string="❌"
                             type="object" class="oe_highlight"/>

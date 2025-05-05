@@ -1,4 +1,6 @@
 from odoo import models,fields,api
+from odoo.exceptions import ValidationError
+from odoo.tools.float_utils import float_compare,float_is_zero
 
 class TestModel(models.Model):
     _name = "estate_property"
@@ -21,7 +23,7 @@ class TestModel(models.Model):
     property_tags_ids = fields.Many2many('property.tags',string="Property Tags")
     
     # many to one relationship
-    property_type_id = fields.Many2one('property_type',string = "property type m2o")
+    property_type_id = fields.Many2one('property_type',string = "property Type")
     
     # one to many
     offer_ids = fields.One2many("property.offer","property_id",string = "Offers")
@@ -61,6 +63,38 @@ class TestModel(models.Model):
     selling_price = fields.Monetary("Selling Price",default = 0,currency_field ="currency_id",readonly='True',copy = False)
     currency_id = fields.Many2one('res.currency', string='Currency')
     
+    
+    # advanced constraint using python 
+    """@api.constrains('selling_price')       #decorate a constraint checker, checks every time any changes in selling price 
+    def _check_selling_price_90(self):
+        for record in self:
+            
+            # normaly checking logic if s_price not 0 and if (accepted not in status of records)
+            if record.selling_price != 0 and "accepted" not in record.offer_ids.mapped("status"):
+                #  throuwing exception
+                raise ValidationError("Can't set a Selling Price when offer is not accepted")
+                        
+            if record.selling_price < (record.expected_price * .9 ):
+                raise ValidationError("Selling price cant be less than 90 %  of expected Price")"""
+            
+    # same constrains using float methods, always use float methods 
+    @api.constrains("selling_price")
+    def _check_selling_prrice_90_float(self):
+        for record in self:
+            # getting a list of all the offer status in the record
+            # mapped is used to get the status of the offer ids in the record
+            offer_statuses = record.offer_ids.mapped("status")
+            
+            # [LOGIC]  if there is no status is accepted and if selling_price is not zero --> Throws exception
+            if  not any (sts == "accepted" for sts in offer_statuses) and not float_is_zero(record.selling_price,precision_digits=2):
+                raise ValidationError("Can't set a Selling Price when offer is not accepted")
+            
+            # [LOGIC] 
+            if float_compare(record.selling_price,(record.expected_price * .9 ),precision_digits = 2) < 0:
+                raise ValidationError("Selling price cant be less than 90 %  of expected Price")
+                
+    
+
     # creating 2 many to one fields
     
     # res.partner: a partner is a physical or legal entity. It can be a company, an individual or even a contact address.
@@ -97,7 +131,36 @@ class TestModel(models.Model):
         else:
             self.garden_area=0
             self.garden_orientation=False
+            
+#  button actions
+   
+    def action_set_sold(self):
+        for record in self:
+            self.state = "sold"
+        return True
     
+    
+    def action_set_cancel(self):
+        for record in self:
+            self.state = "cancelled"
+        return True
+    
+    
+    #  SQL constraints to check wheather the price is positive
+
+    _sql_constraints = [
+    ('check_expected_price_1', 'CHECK (expected_price > 1)', 'Expected price must be greater than 1'), 
+    ('unique_title_property_type', 'UNIQUE(title, property_type)', 'Title and Property Type must be unique'),
+]
+
+    
+    # @api.constraints('selling_price','expected_price','best_price')
+    # def _check_price(self):
+    #     for record in self:
+    #         if ((record.selling_price<0) or (record.expected_price<0) or (record.best_price<0)):
+    #             raise ValidationError("Only Positive Values For Price")
+            
+
 
 
 class TestModel4(models.Model):

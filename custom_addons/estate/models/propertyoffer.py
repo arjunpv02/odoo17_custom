@@ -22,13 +22,16 @@ class TestModel5(models.Model):
     validity = fields.Integer(default = 7,string="Validity",store=True)
     expiery_date = fields.Date(compute="_compute_expiery_date",inverse="_inverse_validity",store=True)
     
+    _sql_constraints = [
+        ('check_offer_price', 'CHECK(price > 0)',
+         'The Offer price should be positiveeee')
+    ]
     
 # editing part to compute related field
     def action_accept_offer(self):
         # when function is called status is updating
         for record in self:
-            record.status = "accepted"
-            
+            record.status = "accepted"           
         # also make changes in buyer and selling price
             record.property_id.buyer_id = record.partner_id
             record.property_id.selling_price = record.price   # updating the related model
@@ -39,11 +42,11 @@ class TestModel5(models.Model):
     def action_refuse_offer(self):
         for record in self:
             record.status = "refused"
-        return True
+        return True   # public methord will always return something
     
     
-    @api.depends('validity')
-    def _compute_expiery_date(self):
+    @api.depends('validity')  
+    def _compute_expiery_date(self):    # compute methord is a private methord
         for record in self:
             if record.create_date:
                 record.expiery_date = record.create_date + timedelta(days = record.validity)
