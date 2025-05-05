@@ -25,6 +25,7 @@ class TestModel(models.Model):
     # many to one relationship
     property_type_id = fields.Many2one('property_type',string = "property Type")
     
+    
     # one to many
     offer_ids = fields.One2many("property.offer","property_id",string = "Offers")
     

@@ -1,0 +1,9 @@
+    <record id = "test_action_property_type" model="ir.actions.act_window">
+        <field name="name"> Test Property Type </field>
+        <field name="res_model">test.property.type</field>
+
+        <field name="view_mode">tree,kanban,graph,form</field>
+    </record>
+
+
+    

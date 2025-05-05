@@ -26,7 +26,7 @@
             <h1> <field name="title"> </field> </h1>
             <sheet>
             <h1 name="title"> </h1>
-<!-- New buttons to set propert sold and cancell -->
+            <!-- New buttons to set propert sold and cancell -->
             <button name="action_set_sold" string="SOLD"
                     type="object" class="oe_highlight"/>
 
@@ -73,7 +73,7 @@
                         <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                         <field name="partner_id"/>
                         <field name="status"/>
-<!-- code editing part -->
+                    <!-- code editing part -->
 
                         <button name="action_accept_offer" string="✅"
                             type="object" class="oe_highlight"/>
