@@ -15,7 +15,7 @@ class EstateAccount(models.Model):
 
             # Ensure the selling price is valid
             if float(record.selling_price) <= 0:
-                raise UserError("Selling price must be greater than zero.")
+                raise UserError("Selling price must be greater than zero .")
 
             # Find a sale-type journal for creating the invoice
             journal = self.env['account.journal'].search([('type', '=', 'sale')], limit=1)
