@@ -1,29 +1,22 @@
 from odoo import models,fields,api
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError,UserError
 from odoo.tools.float_utils import float_compare,float_is_zero
 
 class TestModel(models.Model):
     _name = "estate_property"
     _description = "real estate properties"
     _rec_name = "title"
+    # odering the model items  (similar to order by)
+    _order = "id desc"
     
 
     title = fields.Char("Title",required = True,index = True)
     
-    
-    property_type = fields.Selection(
-        [
-            ('house','house'),
-            ('apartment','apartment'),
-            ('castle','castle'),
-            ('penthouse','pent_house'),
-        ],string = "Property Type",required = True)
-    
     # many to many relationship
-    property_tags_ids = fields.Many2many('property.tags',string="Property Tags")
+    property_tags_ids = fields.Many2many('estate.property.tags',string="Property Tags")
     
     # many to one relationship
-    property_type_id = fields.Many2one('property_type',string = "property Type")
+    property_type_id = fields.Many2one('property_type',string ="property Type")
     
     
     # one to many
@@ -42,6 +35,7 @@ class TestModel(models.Model):
         ],default = 'new'
     )
     
+
     post_code = fields.Integer("Post Code",required = True)
     tags = fields.Text("Tags")
     bedrooms = fields.Integer("Bed rooms")
@@ -61,8 +55,8 @@ class TestModel(models.Model):
     string='Garden Orientation'
     )
     expected_price = fields.Float("Expected Price",digits = (12,2))
-    selling_price = fields.Monetary("Selling Price",default = 0,currency_field ="currency_id",readonly='True',copy = False)
-    currency_id = fields.Many2one('res.currency', string='Currency')
+    selling_price = fields.Float("Selling Price", default=0, readonly=True, copy=False)
+    
     
     
     # advanced constraint using python 
@@ -78,21 +72,14 @@ class TestModel(models.Model):
             if record.selling_price < (record.expected_price * .9 ):
                 raise ValidationError("Selling price cant be less than 90 %  of expected Price")"""
             
-    # same constrains using float methods, always use float methods 
-    @api.constrains("selling_price")
-    def _check_selling_prrice_90_float(self):
-        for record in self:
-            # getting a list of all the offer status in the record
-            # mapped is used to get the status of the offer ids in the record
-            offer_statuses = record.offer_ids.mapped("status")
-            
-            # [LOGIC]  if there is no status is accepted and if selling_price is not zero --> Throws exception
-            if  not any (sts == "accepted" for sts in offer_statuses) and not float_is_zero(record.selling_price,precision_digits=2):
-                raise ValidationError("Can't set a Selling Price when offer is not accepted")
-            
-            # [LOGIC] 
-            if float_compare(record.selling_price,(record.expected_price * .9 ),precision_digits = 2) < 0:
-                raise ValidationError("Selling price cant be less than 90 %  of expected Price")
+    # # same constrains using float methods, always use float methods 
+    # @api.constrains("selling_price")
+    # def _check_selling_price_90_float(self):
+    #     for record in self:
+    #         # [LOGIC] 
+    #         if record.state == 'offer_accepted':
+    #             if float_compare(record.selling_price,(record.expected_price * .9 ),precision_digits = 2) < 0:
+    #                 raise ValidationError("Selling price 0000 cant be less than 90 %  of expected Price")
                 
     
 
@@ -161,14 +148,14 @@ class TestModel(models.Model):
     #         if ((record.selling_price<0) or (record.expected_price<0) or (record.best_price<0)):
     #             raise ValidationError("Only Positive Values For Price")
             
-
-
-
-class TestModel4(models.Model):
-    _name = "property.tags"
-    
-    name = fields.Char(required = True, string = "Property tag")
-    
+            
+            
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_property_new_cancelled(self):
+        for record in self:
+            if record.state not in ('new','cancelled'):
+                raise UserError("Only delete  NEW/CANCELLED property")
+                           
 
 # there is a model.Model class in odoo which is used to create a new model.
 # The model.Model class is the base
@@ -176,12 +163,6 @@ class TestModel4(models.Model):
 
 # Here we are creating a new model called property_type which is used to create a new model.
 # we can also use TestModel1 and TestModel2 to create a new model as it is base class.
-class TestModel1(models.Model):
-    _name = "property_type"
-    _description = "available property types in estate module"
-
-    name = fields.Char(string ="proerty types", required=True)
-
 
 class TestModel2(models.Model):
     _name = "test.property"

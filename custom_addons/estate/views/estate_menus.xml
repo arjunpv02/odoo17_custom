@@ -20,8 +20,8 @@
     <!-- new menu item for model prperty.tags -->
     <menuitem id="menu_properties_tags" name="Property Tags" parent="menu_estate_root" action="action_property_tags" sequence="5"/>
 
-    <menuitem id="test_menu_properties" name="TEST Property" parent ="menu_estate_root" action = "test_action_property" sequence="1"/>
-    <menuitem id="test_menu_properties_types" name="TEST Property TYPES" parent="menu_estate_root" action = "test_action_property_type" sequence="2"/>
+    <!-- <menuitem id="test_menu_properties" name="TEST Property" parent ="menu_estate_root" action = "test_action_property" sequence="1"/>
+    <menuitem id="test_menu_properties_types" name="TEST Property TYPES" parent="menu_estate_root" action = "test_action_property_type" sequence="2"/> -->
 
 </odoo>
 

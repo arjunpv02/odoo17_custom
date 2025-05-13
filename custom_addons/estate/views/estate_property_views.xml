@@ -5,12 +5,16 @@
         <field name="name">estate.property.tree</field>
         <field name="model">estate_property</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree  
+                decoration-success="state == 'offer_recieved' or state == 'offer_accepted'"
+                decoration-muted="state == 'sold'"
+                decoration-bf="state == 'offer_accepted'">
                 <field name="title" />
-                <field name="property_type"/>
+                <field name="property_type_id"/>
                 <field name="expected_price"/>
                 <field name="seller_id"/>
-                <field name="bedrooms"/>
+                <field name="state"/>
+                <field name="date_availabilty" optional="hide"/>
                 <field name="active"/>
             </tree>
         </field>
@@ -26,18 +30,42 @@
             <h1> <field name="title"> </field> </h1>
             <sheet>
             <h1 name="title"> </h1>
-            <!-- New buttons to set propert sold and cancell -->
-            <button name="action_set_sold" string="SOLD"
-                    type="object" class="oe_highlight"/>
 
-            <button name="action_set_cancel" string="CANCEL"
-                    type="object" class="oe_highlight"/>
+         <!-- flex container: left buttons, right statusbar -->
+          <div class="oe_button_box d-flex justify-content-between align-items-center">
+
+            <!-- Left side buttons -->
+            <div>
+              <button name="action_set_sold"
+                      string="SOLD"
+                      type="object"
+                      class="oe_highlight me-2"
+                      icon="fa-check"
+                      invisible="state not in ['new','offer_accepted']"/>
+              <button name="action_set_cancel"
+                      string="CANCEL"
+                      type="object"
+                      class="oe_highlight"
+                      icon="fa-times"
+                      invisible="state == 'sold'"/>
+            </div>
+
+            <!-- Right side statusbar -->
+            <div>
+              <field name="state"
+                     widget="statusbar"
+                     statusbar_visible="new,offer_recieved,offer_accepted,sold"/>
+            </div>
+
+          </div>
  
             <group>
                 <group>
-                    <field name="property_type"/>
-                    <field name="property_tags_ids" widget="many2many_tags"/>
-                    <field name="property_type_id"/>
+                    <!-- Adding color to the tags -->
+                    <field name="property_tags_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>  
+
+                    <field name="property_type_id" options="{'no_create_edit': true,'no_open': true}"/>
+                    <!-- To make this field as read only <field name="property_type_id" readonly="1"/> -->
                     <field name="buyer_id"/>
                     <field name="seller_id"/>
                     <field name="state"/>
@@ -61,33 +89,46 @@
                     <field name="date_availabilty"/>
                     <field name="garden"/>
                     <field name="garage"/>
-                    <field name="garden_area"/>
-                    <field name="garden_orientation"/>
+                    <field name="garden_area" invisible="not garden"/>
+                    <field name="garden_orientation" invisible="not garden"/>
                 </group>
             </page>
             
             <!-- editing part -->
             <page string="Offers">
-                <field name="offer_ids">
-                    <tree decoration-info="status == 'pending'" decoration-success="status == 'accepted'" decoration-danger="status == 'refused'">
-                        <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="offer_ids" readonly="state in ['sold','cancelled','offer_accepted']">
+                    <!-- change ORDERING IN XML USING default_order -->
+                    <tree 
+                        editable="bottom" 
+                        decoration-info="status == 'pending'" 
+                        decoration-success="status == 'accepted'" 
+                        decoration-danger="status == 'refused'" 
+                        default_order="price desc">
+                        <field name="price"/>
                         <field name="partner_id"/>
-                        <field name="status"/>
+                        <field name="status" invisible="status =='accepted'"/>
+                        <field name="property_type_id"/>
                     <!-- code editing part -->
 
-                        <button name="action_accept_offer" string="✅"
-                            type="object" class="oe_highlight"/>
+                        <button 
+                            name="action_accept_offer" string="✅"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="status == 'accepted' or status == 'refused'"/>
+
                             <!-- type="object": Calls a Python method (not a server action). -->
 
-                        <button name="action_refuse_offer" string="❌"
-                            type="object" class="oe_highlight"/>
-
+                        <button name="action_refuse_offer"
+                            string="❌"
+                            type="object" 
+                            class="oe_highlight" 
+                            invisible="status == 'accepted' or status == 'refused'"/>
                         <field name="validity"/>
                         <field name="expiery_date"/>
                     </tree>
                     <form string="Offer Details">
                         <group>
-                            <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="price"/>
                             <field name="status"/>
                             <field name="partner_id"/>
                             <field name="validity"/>
@@ -108,7 +149,6 @@
                 <group>
                     <field name="expected_price"/>
                     <field name="selling_price" readonly="1"/>
-                    <field name="currency_id"/>
                 </group>
             </page>
             </notebook>
@@ -124,19 +164,25 @@
         <field name="name">estate.property.search</field>
         <field name="model">estate_property</field>
         <field name="arch" type="xml">
-            <search string="Search Real Estate Properties">
+            <search string="Search Real Estate Properties"> 
+            <!-- context to make it default -->
 
                 <!-- Searchable fields shown as filters -->
-                <field name="active" string="Active"/>
+                <!-- active is a non relational filed so here  -->
                 <field name="title"/>
                 <field name="post_code"/>
                 <field name="expected_price"/>
                 <field name="bedrooms"/>
-                <field name="living_area"/>
+                <!-- adding a filter to search living_area using the input number -->
+                <field name="living_area" string="Living Area" filter_domain="[('living_area','>=',self)]"/>
                 <field name="facades"/>
+                <!-- new search chapter 11 -->
                                
                 <!-- Adds a separator line between fields and custom filters -->
                 <separator/>
+
+                <filter string="Active properties" name="active_search_default" domain="[('state','not in',['sold','cancelled'])]"/>
+
 
                 <!-- Custom filter to show inactive properties -->
                 <filter string="Inactive Properties" name="inactive" domain="[('active', '=', False)]"/>
@@ -144,7 +190,7 @@
 
                 <!-- custom filter to archive active and rental properties -->
                 <filter string="Active + Rentals" name="active_rentals"
-                        domain="[ '&amp;', ('active', '=', True), '|', ('property_type', '=', 'rent'), ('property_type', '=', 'rental') ]"/>
+                        domain="[ '&amp;', ('active', '=', True), '|', ('property_type_id', '=', 'rent'), ('property_type_id', '=', 'rental') ]"/>
 
                 <!-- custom filter to find new & offer recieved properties -->
                 <filter string = "Available Properties" name="available_property"
@@ -156,7 +202,7 @@
 
                     <!-- Group records by 'property_type' -->
                     <filter string="Property Type" name="group_property_type"
-                            context="{'group_by': 'property_type'}"/> 
+                            context="{'group_by': 'property_type_id'}"/> 
                     
                     <!-- Group records by 'state' -->
                     <filter string="State" name="group_state"
@@ -189,7 +235,7 @@
             <kanban>
                 <!-- These fields are used in rendering the kanban cards -->
                 <field name="title"/>
-                <field name="property_type"/>
+                <field name="property_type_id"/>
                 <field name="expected_price"/>
                 <field name="garden"/> <!-- Required for conditional display (🌳 or Garden indicator) -->
 
@@ -220,7 +266,7 @@
                                 </strong>
 
                                 <!-- Property type display -->
-                                <div><field name="property_type"/></div>
+                                <div><field name="property_type_id"/></div>
 
                                 <!-- Expected price display -->
                                 <div><field name="expected_price"/></div>
@@ -280,39 +326,28 @@
         <field name="res_model">estate_property</field>
 
         <field name="view_mode">tree,kanban,graph,form</field>
+
+        <field name="context">{'search_default_active_search_default': 1}</field>
+
+        <!-- CREATION OF A DEFAULT FILTER (CONNECTED TO SEARCH XML) -->
     </record>
 
     <!--  ACTION FOR ESTATE PROPERTY TYPE -->
-    <record id="action_property_type" model="ir.actions.act_window">
+    <!-- <record id="action_property_type" model="ir.actions.act_window">
         <field name="name"> Proerty Types </field>
         <field name="res_model">property_type</field>
 
         <field name="view_mode">tree,kanban,graph,form</field>
-    </record>
+    </record> -->
 
-    <!--  ACTION FOR (TEST) ESTATE PROPERTY TYPE -->
-    <record id="test_action_property" model="ir.actions.act_window">
-        <field name="name"> Test Proerty </field>
-        <field name="res_model">test.property</field>
-
-        <field name="view_mode">tree,kanban,graph,form</field>
-    </record>
-
-    <record id = "test_action_property_type" model="ir.actions.act_window">
-        <field name="name"> Test Property Type </field>
-        <field name="res_model">test.property.type</field>
-
-        <field name="view_mode">tree,kanban,graph,form</field>
-    </record>
 
     <!-- Action for new model property.tags -->
     <record id="action_property_tags" model="ir.actions.act_window">
         <field name="name"> Property Tags </field>
-        <field name="res_model">property.tags</field>
+        <field name="res_model">estate.property.tags</field>
 
         <field name="view_mode">tree,kanban,graph,form</field>
     </record>
-
-                             
+                           
 </odoo>
 

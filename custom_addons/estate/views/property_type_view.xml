@@ -1,9 +1,49 @@
-    <record id = "test_action_property_type" model="ir.actions.act_window">
-        <field name="name"> Test Property Type </field>
-        <field name="res_model">test.property.type</field>
+<odoo>  
+    <!-- FORM VIEW FOR PROPERTY TYPE -->
+    <record id="view_property_type_form" model="ir.ui.view">
+        <field name="name">estate.type.form</field>
+        <field name="model">property_type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <field name="name"/>
+                    <notebook>
+                        <page string="Properties">
+                            <field name="property_ids">
+                                <tree editable="bottom">
+                                    <field name="title"/>
+                                    <field name="expected_price"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
-        <field name="view_mode">tree,kanban,graph,form</field>
+    <!-- VIEW LIST OF PROPERTY TYPE -->
+    <record id="view_property_type_tree" model="ir.ui.view">
+        <field name ="name">estate.type.tree</field>
+        <field name="model">property_type</field>
+        <field name="arch" type="xml">
+        <tree > 
+            <!-- <tree editable="bottom" is used to edit the fields when clicked
+                    turn it of to see the form view when clicked -->
+            <!-- creating a sequence to manually order-->
+            <field name="sequence" widget="handle"/>
+            <field name="name"/>
+            <field name="offer_count"/>
+        </tree>
+        </field>
     </record>
 
 
-    
+    <!-- ACTION FOR PROPERTY TYPE -->
+    <record id="action_property_type" model="ir.actions.act_window">
+        <field name="name"> Proerty Types </field>
+        <field name="res_model">property_type</field>
+        <field name="view_mode">tree,kanban,graph,form</field>
+    </record>
+</odoo>
